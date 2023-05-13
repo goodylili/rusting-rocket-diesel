@@ -1,45 +1,74 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
-#![feature(decl_macro)]
+#![feature(proc_macro_hygiene, decl_macro)]
+
+use diesel::prelude::*;
+use crate::database::establish_connection;
+use crate::models::{NewStudent, Student};
+use rocket::post;
+use rocket::get;
+use rocket::put;
+use rocket::delete;
+use rocket_contrib::json::{Json, JsonValue};
+use serde_json::json;
+use crate::schema::student::dsl::student;
 
 
+#[post("/students", format = "json", data = "<new_student>")]
+fn create_student(new_student: Json<NewStudent>) -> Json<Student> {
+    let connection = establish_connection();
 
+    diesel::insert_into(student::table)
+        .values(&new_student.into_inner())
+        .execute(&connection)
+        .expect("Error creating new student");
 
-use serde_json::{json, Value};
-
-use rocket_contrib::json::Json;
-use serde_derive::{Deserialize, Serialize};
-
-use crate::Student;
-
-#[post("/add", data = "<student>")]
-fn create(student: Json<Student>) -> Json<Student> {
-    student
+    let student = student::table.order(student::id.desc()).first(&connection).unwrap();
+    Json(student)
 }
 
 
 
-#[get("/read")]
-fn read() -> Json<Value> {
-    Json(json!([
-        "hero 1",
-        "hero 2"
-    ]))
+
+#[put("/students/<id>", format = "json", data = "<updated_student>")]
+fn update_student(id: i32, updated_student: Json<NewStudent>) -> Json<Student> {
+    let connection = establish_connection();
+
+    diesel::update(student.find(id))
+        .set(updated_student.into_inner())
+        .execute(&connection)
+        .expect(&format!("Unable to find student {}", id));
+
+    let student = student.find(id).first(&connection).unwrap();
+    Json(student)
 }
 
 
-#[put("/update/<id>", data = "<student>")]
-fn update(id: i32, student: Json<Student>) -> Json<Student> {
-    student
+
+
+
+#[get("/students")]
+fn get_students() -> Json<JsonValue> {
+    let connection = establish_connection();
+
+    let students = student.load::<Student>(&connection)
+        .expect("Error loading students");
+
+    Json(JsonValue::from(json!({
+        "students": students,
+    })))
 }
 
 
-#[delete("/delete/<id>")]
-fn delete(id: i32) -> Json<Value> {
-    Json(json!({"status": "ok"}))
+#[delete("/students/<id>")]
+fn delete_student(id: i32) -> Json<JsonValue> {
+    let connection = establish_connection();
+
+    diesel::delete(student.find(id))
+        .execute(&connection)
+        .expect(&format!("Unable to find student {}", id));
+
+    Json(JsonValue::from(json!({
+        "status": "success",
+        "message": format!("Student with ID {} has been deleted", id),
+    })))
 }
 
-
-fn main() {
-    rocket::ignite().mount("/", routes![create, update, delete]).mount("/", routes![read]).launch();
-}
