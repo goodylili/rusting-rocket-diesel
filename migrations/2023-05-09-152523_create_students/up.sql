@@ -1,12 +1,10 @@
 -- Your SQL goes here
 
-
--- Your SQL goes here
-
-CREATE TABLE "people"
+CREATE TABLE "student"
 (
     "id"         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "first_name" TEXT    NOT NULL,
     "last_name"  TEXT    NOT NULL,
-    "height"        INTEGER NOT NULL
+    "age"        INTEGER NOT NULL
 );
+
