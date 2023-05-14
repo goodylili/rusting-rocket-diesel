@@ -8,41 +8,21 @@ use diesel::associations::HasTable;
 use diesel::prelude::*;
 use rocket::delete;
 use rocket::get;
+use rocket::put;
+
 use rocket::post;
 use rocket::routes;
 use rocket_contrib::json::{Json, JsonValue};
 use serde_json::json;
 
 use crate::database::establish_connection;
-use crate::models::{NewStudent, Student};
+use crate::models::{NewStudent, Student, UpdateStudent};
 use crate::schema::student::dsl::student;
 
 mod schema;
 mod database;
 mod models;
 mod routes;
-
-
-#[post("/student", format = "json", data = "<new_student>")]
-fn create_student(mut new_student: Json<NewStudent>) -> Json<JsonValue> {
-    let connection = establish_connection();
-    let new_student = NewStudent {
-        first_name: new_student.first_name,
-        last_name: new_student.last_name,
-        age: 17,
-    };
-
-    diesel::insert_into(self::schema::student::dsl::student)
-        .values(&new_student)
-        .execute(&connection)
-        .expect("Error saving new student");
-
-    Json(JsonValue::from(json!({
-        "status": "success",
-        "message": "Student has been created",
-
-    })))
-}
 
 
 #[get("/students")]
@@ -70,33 +50,41 @@ fn delete_student(id: i32) -> Json<JsonValue> {
 }
 
 
-#[post("/students/<id>", data = "<request>")]
-fn update_student(conn: SqliteConnection, id: i32, request: Json<UpdateStudentRequest>) -> Json<JsonValue> {
-    use crate::schema::student::dsl::*;
-
-    // Build an update query based on the request body
-    let update_query = diesel::update(student.find(id));
-    let update_query = match request.first_name {
-        Some(new_first_name) => update_query.set(first_name.eq(new_first_name)),
-        None => update_query,
-    };
-    let update_query = match request.last_name {
-        Some(new_last_name) => update_query.set(last_name.eq(new_last_name)),
-        None => update_query,
-    };
-    let update_query = match request.age {
-        Some(new_age) => update_query.set(age.eq(new_age)),
-        None => update_query,
+#[post("/student", format = "json", data = "<new_student>")]
+fn create_student(mut new_student: Json<NewStudent>) -> Json<JsonValue> {
+    let connection = establish_connection();
+    let new_student = NewStudent {
+        first_name: new_student.first_name,
+        last_name: new_student.last_name,
+        age: 17,
     };
 
-    // Execute the update query
-    update_query.execute(&conn);
-
-    // Return a JSON response indicating success
+    diesel::insert_into(self::schema::student::dsl::student)
+        .values(&new_student)
+        .execute(&connection)
+        .expect("Error saving new student");
 
     Json(JsonValue::from(json!({
         "status": "success",
         "message": "Student has been created",
+
+    })))
+}
+
+#[put("/students/<id>", data = "<update_data>")]
+fn update_student(id: i32, update_data: Json<UpdateStudent>) -> Json<JsonValue> {
+    let connection = establish_connection();
+
+    // Use the `update` method of the Diesel ORM to update the student's record
+    let updated_student = diesel::update(student.find(id))
+        .set(&update_data.into_inner())
+        .execute(&connection)
+        .expect("Failed to update student");
+
+    // Return a JSON response indicating success
+    Json(JsonValue::from(json!({
+        "status": "success",
+        "message": format!("Student {} has been updated", id),
     })))
 }
 

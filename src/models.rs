@@ -19,8 +19,9 @@ pub struct NewStudent<'a> {
     pub age: i32,
 }
 
-#[derive(Deserialize)]
-struct UpdateStudent {
+#[derive(Deserialize, AsChangeset)]
+#[table_name="student"]
+pub struct UpdateStudent {
     first_name: Option<String>,
     last_name: Option<String>,
     age: Option<i32>,
