@@ -1,7 +1,7 @@
-use serde_derive::{Serialize, Deserialize};
-use crate::schema::student;
 use diesel::{prelude::*};
+use serde_derive::{Deserialize, Serialize};
 
+use crate::schema::student;
 
 #[derive(Queryable, Serialize)]
 pub struct Student {
@@ -12,7 +12,7 @@ pub struct Student {
 }
 
 #[derive(Queryable, Insertable, Serialize, Deserialize)]
-#[table_name="student"]
+#[table_name = "student"]
 pub struct NewStudent<'a> {
     pub first_name: &'a str,
     pub last_name: &'a str,
@@ -20,7 +20,7 @@ pub struct NewStudent<'a> {
 }
 
 #[derive(Deserialize, AsChangeset)]
-#[table_name="student"]
+#[table_name = "student"]
 pub struct UpdateStudent {
     first_name: Option<String>,
     last_name: Option<String>,

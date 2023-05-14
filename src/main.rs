@@ -1,16 +1,14 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-
 #[macro_use]
 extern crate diesel;
 
-use diesel::associations::HasTable;
+
 use diesel::prelude::*;
 use rocket::delete;
 use rocket::get;
-use rocket::put;
-
 use rocket::post;
+use rocket::put;
 use rocket::routes;
 use rocket_contrib::json::{Json, JsonValue};
 use serde_json::json;
@@ -22,11 +20,10 @@ use crate::schema::student::dsl::student;
 mod schema;
 mod database;
 mod models;
-mod routes;
 
 
 #[get("/students")]
-fn get_students() -> Json<JsonValue> {
+pub fn get_students() -> Json<JsonValue> {
     let connection = establish_connection();
 
     let students = student.load::<Student>(&connection).expect("Error loading students");
@@ -38,7 +35,7 @@ fn get_students() -> Json<JsonValue> {
 
 
 #[delete("/students/<id>")]
-fn delete_student(id: i32) -> Json<JsonValue> {
+pub fn delete_student(id: i32) -> Json<JsonValue> {
     let connection = establish_connection();
 
     diesel::delete(student.find(id)).execute(&connection).expect(&format!("Unable to find student {}", id));
@@ -51,7 +48,7 @@ fn delete_student(id: i32) -> Json<JsonValue> {
 
 
 #[post("/student", format = "json", data = "<new_student>")]
-fn create_student(mut new_student: Json<NewStudent>) -> Json<JsonValue> {
+pub fn create_student(new_student: Json<NewStudent>) -> Json<JsonValue> {
     let connection = establish_connection();
     let new_student = NewStudent {
         first_name: new_student.first_name,
@@ -59,7 +56,7 @@ fn create_student(mut new_student: Json<NewStudent>) -> Json<JsonValue> {
         age: 17,
     };
 
-    diesel::insert_into(self::schema::student::dsl::student)
+    diesel::insert_into(crate::schema::student::dsl::student)
         .values(&new_student)
         .execute(&connection)
         .expect("Error saving new student");
@@ -72,11 +69,11 @@ fn create_student(mut new_student: Json<NewStudent>) -> Json<JsonValue> {
 }
 
 #[put("/students/<id>", data = "<update_data>")]
-fn update_student(id: i32, update_data: Json<UpdateStudent>) -> Json<JsonValue> {
+pub fn update_student(id: i32, update_data: Json<UpdateStudent>) -> Json<JsonValue> {
     let connection = establish_connection();
 
     // Use the `update` method of the Diesel ORM to update the student's record
-    let updated_student = diesel::update(student.find(id))
+    let _updated_student = diesel::update(student.find(id))
         .set(&update_data.into_inner())
         .execute(&connection)
         .expect("Failed to update student");
@@ -89,10 +86,17 @@ fn update_student(id: i32, update_data: Json<UpdateStudent>) -> Json<JsonValue> 
 }
 
 
+// curl http://localhost:8000/students
+// curl -X DELETE http://localhost:8000/students/1
+// curl -X POST http://localhost:8000/student -H 'Content-Type: application/json' -d '{"first_name": "John", "last_name": "Doe"}'
+// curl -X PUT http://localhost:8000/students/1 -H 'Content-Type: application/json' -d '{"first_name": "Jane", "last_name": "Doe"}'
+
+
 fn main() {
-    rocket::ignite().mount("/", routes![
-        create_student,
+        rocket::ignite().mount("/", routes![
         get_students,
         delete_student,
+        create_student,
+        update_student,
     ]).launch();
 }
