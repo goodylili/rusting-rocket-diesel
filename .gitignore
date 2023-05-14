@@ -3,3 +3,4 @@
 target
 .env
 pushaG.sh
+database.db
