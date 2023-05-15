@@ -1,6 +1,6 @@
-# Rusting Rocket on Diesel (working on docs)
+# Rusting Rocket on Diesel 
 
-Rusting Rocket on Diesel is a simple REST API built with Rust, Rocket, and Diesel. It provides CRUD operations for a table of students.
+Rusting Rocket on Diesel is a simple REST API built with Rust, Rocket, and Diesel that provides CRUD operations on a table of students.
 
 ## Getting Started
 
@@ -15,7 +15,7 @@ diesel migration run
 cargo run
 ```
 
-This will start the server on port 8000. You can then use a tool like Postman or curl to test the API.
+Running these commands will start the server on port `8000`. Once the server is up and running, you can proceed to test the API.
 
 ## API Documentation
 
@@ -46,13 +46,13 @@ curl http://localhost:8000/students/1
 - `POST /students` - Create a new student
 
 ```
-curl -X POST http://localhost:8000/students -H 'Content-Type: application/json' -d '{"first_name": "John", "last_name": "Doe"}'
+curl -X POST http://localhost:8000/student -H 'Content-Type: application/json' -d '{"first_name": "John", "last_name": "Doe", "age": 17}'
 ```
 
 - `PUT /students/1` - Update an existing student
 
 ```
-curl -X PUT http://localhost:8000/students/1 -H 'Content-Type: application/json' -d '{"first_name": "Jane", "last_name": "Doe"}'
+curl -X PUT http://localhost:8000/students/1 -H 'Content-Type: application/json' -d '{"first_name": "Jane", "last_name": "Doe", "age": 18}'
 ```
 
 - `DELETE /students/1` - Delete a student
