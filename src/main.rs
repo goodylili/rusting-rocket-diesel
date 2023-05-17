@@ -86,11 +86,6 @@ pub fn update_student(id: i32, update_data: Json<UpdateStudent>) -> Json<JsonVal
 }
 
 
-// curl http://localhost:8000/students
-// curl -X DELETE http://localhost:8000/students/1
-// curl -X POST http://localhost:8000/student -H 'Content-Type: application/json' -d '{"first_name": "John", "last_name": "Doe"}'
-// curl -X PUT http://localhost:8000/students/1 -H 'Content-Type: application/json' -d '{"first_name": "Jane", "last_name": "Doe"}'
-
 
 fn main() {
         rocket::ignite().mount("/", routes![
